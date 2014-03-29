@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
+	"html/template"
 )
 
 // Represents a page in the wiki.
@@ -38,11 +38,30 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+	t, _ := template.ParseFiles("templates/view.html")
+	t.Execute(w, p)
+}
+
+func editHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[len("/edit"):]
+	p, err := loadPage(title)
+	templateFile := "edit"
+	if err != nil {
+		p = &Page{Title: title}
+		templateFile = "create"
+	}
+	t, _ := template.ParseFiles("templates/" + templateFile + ".html")
+	t.Execute(w, p)
+}
+
+func saveHandler(w http.ResponseWriter, r *http.Request) {
+	http.NotFound(w, r)
 }
 
 func main() {
 	http.HandleFunc("/view/", viewHandler)
+	http.HandleFunc("/edit/", editHandler)
+	http.HandleFunc("/save/", saveHandler)
 	http.ListenAndServe(":8080", nil)
 }
 
