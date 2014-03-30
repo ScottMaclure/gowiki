@@ -35,27 +35,31 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/view/"):]
 	p, err := loadPage(title)
 	if err != nil {
-		http.NotFound(w, r)
+		// If we attempt to view a page that doesn't exist, lets create one.
+		http.Redirect(w, r, "/edit/" + title, http.StatusFound)
 		return
 	}
-	t, _ := template.ParseFiles("templates/view.html")
-	t.Execute(w, p)
+	renderTemplate(w, "view", p)
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/edit"):]
 	p, err := loadPage(title)
-	templateFile := "edit"
+	tmpl := "edit"
 	if err != nil {
 		p = &Page{Title: title}
-		templateFile = "create"
+		tmpl = "create"
 	}
-	t, _ := template.ParseFiles("templates/" + templateFile + ".html")
-	t.Execute(w, p)
+	renderTemplate(w, tmpl, p)
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
+}
+
+func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
+	t, _ := template.ParseFiles("templates/" + tmpl + ".html")
+	t.Execute(w, p)
 }
 
 func main() {
