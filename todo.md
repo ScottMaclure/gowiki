@@ -2,7 +2,6 @@
 
 ## Sooner
 
-* Finish tutorial steps (was up to "Saving Pages").
 * Work out how to use a "master" wrapping template.
 * Serve static content, use a /public/ folder structure.
 * Split wiki.go into a second page.go file, to contain struct and functions for pages.
@@ -22,6 +21,7 @@
 
 * Redirect to index.txt for default route.
 * Bug: redirect issue with /save/ POST. (issue was /save//index, caused 301)
+* Finish tutorial steps (was up to "Saving Pages").
 
 ### 2014-03-30
 
