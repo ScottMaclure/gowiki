@@ -51,8 +51,9 @@ created by net/http.(*Server).Serve
         C:/Users/ADMINI~1/AppData/Local/Temp/2/makerelease250988475/go/src/pkg/net/http/server.go:1644 +0x28e
 ```
 
-
 ## Krzysztof Kowalczyk's Parting thoughts
+
+(of Sumatra PDF fame)
 
 I think writing non-trivial web services is a sweet spot for Go.
 
@@ -62,18 +63,22 @@ Writing in Go is almost as fast and fluent as writing in Python but the code is 
 
 ## Read more
 
-http://golang.org/doc/code.html
+Useful Golang website pages:
 
-http://golang.org/doc/effective_go.html
+* http://golang.org/doc/
+* http://golang.org/doc/code.html
+* http://golang.org/doc/effective_go.html
+* http://golang.org/doc/faq#ancestors
+
+Golang package references:
+
+* http://golang.org/pkg/net/http/
 
 http://blog.kowalczyk.info/article/uvw2/Thoughts-on-Go-after-writing-3-websites.html
-
-http://www.gorillatoolkit.org/
-
-http://golang.org/pkg/net/http/
-
 http://blog.golang.org/go-slices-usage-and-internals
 
-https://github.com/fatih/vim-go
+* https://github.com/fatih/vim-go
+* https://github.com/spf13/hugo
 
-https://github.com/spf13/hugo
+Useful packages
+* http://www.gorillatoolkit.org/
