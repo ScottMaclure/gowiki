@@ -9,6 +9,7 @@
 
 ## Later
 
+* Implement inter-page linking by converting instances of [PageName] to <a href="/view/PageName">PageName</a>. (hint: you could use regexp.ReplaceAllFunc to do this)
 * Dynamically parse all templates in /templates folder, instead of pre-defined ones.
 * Support custom 404/error responses (errorHandler).
 * Support nested hierarchies for pages.
