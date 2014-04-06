@@ -2,6 +2,8 @@ package page
 
 import (
 	"io/ioutil"
+	"html/template"
+	"github.com/russross/blackfriday"
 )
 
 // Represents a page in the wiki.
@@ -35,4 +37,9 @@ func LoadPage(title string) (*Page, error) {
 
 	return &Page{Title: title, Body: body}, nil
 
+}
+
+// Markdown formatted version of the body.
+func (p *Page) GetFormattedBody() template.HTML {
+	return template.HTML(blackfriday.MarkdownBasic(p.Body))
 }

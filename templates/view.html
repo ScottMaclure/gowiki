@@ -1,6 +1,6 @@
 <h1 style="text-transform: capitalize;">{{.Title}}</h1> 
 
-<div style="margin-bottom: 1em;">{{printf "%s" .Body}}</div>
+<div style="margin-bottom: 1em;">{{.GetFormattedBody}}</div>
 
 <div>
 	[ <a href="/edit/{{.Title}}">edit</a> ]

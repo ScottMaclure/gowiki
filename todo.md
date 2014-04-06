@@ -22,6 +22,7 @@
 * Redirect to index.txt for default route.
 * Bug: redirect issue with /save/ POST. (issue was /save//index, caused 301)
 * Finish tutorial steps (was up to "Saving Pages").
+* Wiki page content interpreted as markdown and rendered.
 
 ### 2014-03-30
 
