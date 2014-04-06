@@ -57,6 +57,24 @@ func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
 
 }
 
+// Helper function, given a Page, render using a certain template.
+func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
+
+	err := templates.ExecuteTemplate(w, tmpl + ".html", p)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+// Handle a redirect from base url to viewing a default wiki page.
+// i.e. if user accesses http://localhost:8080/, redirect to http://localhost:8080/view/index
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/view/index", http.StatusFound)
+}
+
 // View a wiki page in html!
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -78,11 +96,6 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Handle a redirect from base url to viewing a default wiki page.
-// i.e. if user accesses http://localhost:8080/, redirect to http://localhost:8080/view/index
-func defaultHandler(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/view/index", http.StatusFound)
-}
 
 // Either edit an existing wiki page, else create a new one if it doesn't exist.
 func editHandler(w http.ResponseWriter, r *http.Request) {
@@ -127,18 +140,6 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/view/" + title, http.StatusFound)
-
-}
-
-// Helper function, given a Page, render using a certain template.
-func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-
-	err := templates.ExecuteTemplate(w, tmpl + ".html", p)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 
 }
 
