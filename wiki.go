@@ -14,6 +14,13 @@ type Page struct {
 	Body []byte
 }
 
+// Load templates ONCE from filesystem, rather than on every request.
+var templates = template.Must(template.ParseFiles(
+	"templates/create.html", 
+	"templates/edit.html", 
+	"templates/view.html",
+))
+
 // Persistence function.
 // "p" is the receiver of this function. Interesting.
 // Will return nil if save works.
@@ -32,50 +39,78 @@ func loadPage(title string) (*Page, error) {
 	return &Page{Title: title, Body: body}, nil
 }
 
+// View a wiki page in html!
 func viewHandler(w http.ResponseWriter, r *http.Request) {
+
 	title := r.URL.Path[len("/view/"):]
+
 	p, err := loadPage(title)
+
 	if err != nil {
 		// If we attempt to view a page that doesn't exist, lets create one.
 		http.Redirect(w, r, "/edit/" + title, http.StatusFound)
 		return
 	}
+
 	renderTemplate(w, "view", p)
+
 }
 
+// Handle a redirect from base url to viewing a default wiki page.
 // i.e. if user accesses http://localhost:8080/, redirect to http://localhost:8080/view/index
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/view/index", http.StatusFound)
 }
 
+// Either edit an existing wiki page, else create a new one if it doesn't exist.
 func editHandler(w http.ResponseWriter, r *http.Request) {
+
 	title := r.URL.Path[len("/edit/"):]
+
 	p, err := loadPage(title)
+
 	tmpl := "edit"
+
 	if err != nil {
 		p = &Page{Title: title}
 		tmpl = "create"
 	}
+
 	renderTemplate(w, tmpl, p)
+
 }
 
+// Save a wiki page to filesystem.
 func saveHandler(w http.ResponseWriter, r *http.Request) {
 
 	title := r.URL.Path[len("/save/"):]
 	body := r.FormValue("body")
 
 	p := &Page{Title: title, Body: []byte(body)}
-	p.save()
+	err := p.save()
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	http.Redirect(w, r, "/view/" + title, http.StatusFound)
 
 }
 
+// Helper function, given a Page, render using a certain template.
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	t, _ := template.ParseFiles("templates/" + tmpl + ".html")
-	t.Execute(w, p)
+
+	err := templates.ExecuteTemplate(w, tmpl + ".html", p)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
+// Load http server, bind handlers.
 func main() {
 
 	port := ":8080"
