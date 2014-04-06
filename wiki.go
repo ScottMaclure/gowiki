@@ -69,6 +69,23 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 
 }
 
+// Example of abstracting shared code using a function literal.
+func makeHandler(fn func (http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		
+		// Extra page title from request
+		// Call the provided handler with that title.
+		title, err := getTitle(w, r)
+		
+		if err != nil {
+			return
+		}
+
+		fn(w, r, title)
+
+	}
+}
+
 // Handle a redirect from base url to viewing a default wiki page.
 // i.e. if user accesses http://localhost:8080/, redirect to http://localhost:8080/view/index
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,13 +93,7 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // View a wiki page in html!
-func viewHandler(w http.ResponseWriter, r *http.Request) {
-
-	title, err := getTitle(w, r)
-
-	if err != nil {
-		return
-	}
+func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 	p, err := loadPage(title)
 
@@ -98,13 +109,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 
 
 // Either edit an existing wiki page, else create a new one if it doesn't exist.
-func editHandler(w http.ResponseWriter, r *http.Request) {
-
-	title, err := getTitle(w, r)
-
-	if err != nil {
-		return
-	}
+func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 	p, err := loadPage(title)
 
@@ -120,19 +125,13 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Save a wiki page to filesystem.
-func saveHandler(w http.ResponseWriter, r *http.Request) {
-
-	title, err := getTitle(w, r)
-
-	if err != nil {
-		return
-	}
+func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 	body := r.FormValue("body")
 
 	p := &Page{Title: title, Body: []byte(body)}
 
-	err = p.save()
+	err := p.save()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -150,9 +149,10 @@ func main() {
 
 	// Application handlers
 	http.HandleFunc("/", defaultHandler)
-	http.HandleFunc("/save/", saveHandler)
-	http.HandleFunc("/view/", viewHandler)
-	http.HandleFunc("/edit/", editHandler)
+	// Wrap these handlers with common functionality.
+	http.HandleFunc("/view/", makeHandler(viewHandler))
+	http.HandleFunc("/edit/", makeHandler(editHandler))
+	http.HandleFunc("/save/", makeHandler(saveHandler))
 
 	log.Println("Server running, access via http://localhost" + port + "\n")
 
