@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"html/template"
 	"log"
+	"regexp"
+	"errors"
 )
 
 // Represents a page in the wiki.
@@ -20,6 +22,8 @@ var templates = template.Must(template.ParseFiles(
 	"templates/edit.html", 
 	"templates/view.html",
 ))
+
+var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 // Persistence function.
 // "p" is the receiver of this function. Interesting.
@@ -39,10 +43,28 @@ func loadPage(title string) (*Page, error) {
 	return &Page{Title: title, Body: body}, nil
 }
 
+// Ensure we get a valid page title from the URL.
+func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
+	
+	m := validPath.FindStringSubmatch(r.URL.Path)
+	
+	if m == nil {
+		http.NotFound(w, r)
+		return "", errors.New("Invalid page title.")
+	}
+
+	return m[2], nil // The title is the second subexpression
+
+}
+
 // View a wiki page in html!
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 
-	title := r.URL.Path[len("/view/"):]
+	title, err := getTitle(w, r)
+
+	if err != nil {
+		return
+	}
 
 	p, err := loadPage(title)
 
@@ -65,7 +87,11 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 // Either edit an existing wiki page, else create a new one if it doesn't exist.
 func editHandler(w http.ResponseWriter, r *http.Request) {
 
-	title := r.URL.Path[len("/edit/"):]
+	title, err := getTitle(w, r)
+
+	if err != nil {
+		return
+	}
 
 	p, err := loadPage(title)
 
@@ -83,11 +109,17 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 // Save a wiki page to filesystem.
 func saveHandler(w http.ResponseWriter, r *http.Request) {
 
-	title := r.URL.Path[len("/save/"):]
+	title, err := getTitle(w, r)
+
+	if err != nil {
+		return
+	}
+
 	body := r.FormValue("body")
 
 	p := &Page{Title: title, Body: []byte(body)}
-	err := p.save()
+
+	err = p.save()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
