@@ -17,14 +17,15 @@ go version go1.2.1 windows/amd64
 
 ## My thoughts
 
-Initial setup on win7 was simple.
+Initial setup on win8 was simple.
 Intellij needed a 3rd party plugin to support golang, but the latest version is only supported on Intellij v13. Grr.
 SublimeText3 has syntax highlighting support for golang.
 There's vim-go for Ivan ;)
 
 Go slices are like collections.
-Functions can return multiple values. I guess that means less wrapping constructs?
-Underscore used for "throw away" values.
+Functions can return multiple values. I guess that means less wrapping constructs, and no need for exception handling.
+	Underscore used for "throw away" values.
+"Must" style API functions are useful for failing early.
 
 ### Go's error reporting
 

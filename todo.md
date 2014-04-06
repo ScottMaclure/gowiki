@@ -5,9 +5,11 @@
 * Finish tutorial steps (was up to "Saving Pages").
 * Work out how to use a "master" wrapping template.
 * Serve static content, use a /public/ folder structure.
+* Split wiki.go into a second page.go file, to contain struct and functions for pages.
 
 ## Later
 
+* Dynamically parse all templates in /templates folder, instead of pre-defined ones.
 * Support custom 404/error responses (errorHandler).
 * Support nested hierarchies for pages.
 * Write a function to convert Title to a file-friendly name. "Hello, World" -> hello-world.
