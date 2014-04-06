@@ -1,20 +1,12 @@
-package main
+package wiki
 
 import (
-	"io/ioutil"
 	"net/http"
 	"html/template"
-	"log"
 	"regexp"
 	"errors"
+	"../page"
 )
-
-// Represents a page in the wiki.
-type Page struct {
-	Title string
-	// io library works with bytes, so that's why we use a byte slice.
-	Body []byte
-}
 
 // Load templates ONCE from filesystem, rather than on every request.
 var templates = template.Must(template.ParseFiles(
@@ -24,24 +16,6 @@ var templates = template.Must(template.ParseFiles(
 ))
 
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
-
-// Persistence function.
-// "p" is the receiver of this function. Interesting.
-// Will return nil if save works.
-func (p *Page) save() error {
-	filename := "data/" + p.Title + ".txt"
-	return ioutil.WriteFile(filename, p.Body, 0600)
-}
-
-// Load data from filesystem.
-func loadPage(title string) (*Page, error) {
-	filename := "data/" + title + ".txt"
-	body, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	return &Page{Title: title, Body: body}, nil
-}
 
 // Ensure we get a valid page title from the URL.
 func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
@@ -58,7 +32,7 @@ func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
 }
 
 // Helper function, given a Page, render using a certain template.
-func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
+func renderTemplate(w http.ResponseWriter, tmpl string, p *page.Page) {
 
 	err := templates.ExecuteTemplate(w, tmpl + ".html", p)
 
@@ -70,7 +44,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 }
 
 // Example of abstracting shared code using a function literal.
-func makeHandler(fn func (http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+func MakeHandler(fn func (http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		
 		// Extra page title from request
@@ -88,14 +62,14 @@ func makeHandler(fn func (http.ResponseWriter, *http.Request, string)) http.Hand
 
 // Handle a redirect from base url to viewing a default wiki page.
 // i.e. if user accesses http://localhost:8080/, redirect to http://localhost:8080/view/index
-func defaultHandler(w http.ResponseWriter, r *http.Request) {
+func DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/view/index", http.StatusFound)
 }
 
 // View a wiki page in html!
-func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
+func ViewHandler(w http.ResponseWriter, r *http.Request, title string) {
 
-	p, err := loadPage(title)
+	p, err := page.LoadPage(title)
 
 	if err != nil {
 		// If we attempt to view a page that doesn't exist, lets create one.
@@ -109,14 +83,14 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 
 // Either edit an existing wiki page, else create a new one if it doesn't exist.
-func editHandler(w http.ResponseWriter, r *http.Request, title string) {
+func EditHandler(w http.ResponseWriter, r *http.Request, title string) {
 
-	p, err := loadPage(title)
+	p, err := page.LoadPage(title)
 
 	tmpl := "edit"
 
 	if err != nil {
-		p = &Page{Title: title}
+		p = &page.Page{Title: title}
 		tmpl = "create"
 	}
 
@@ -125,13 +99,13 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 }
 
 // Save a wiki page to filesystem.
-func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
+func SaveHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 	body := r.FormValue("body")
 
-	p := &Page{Title: title, Body: []byte(body)}
+	p := &page.Page{Title: title, Body: []byte(body)}
 
-	err := p.save()
+	err := p.Save()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -142,21 +116,5 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 }
 
-// Load http server, bind handlers.
-func main() {
 
-	port := ":8080"
-
-	// Application handlers
-	http.HandleFunc("/", defaultHandler)
-	// Wrap these handlers with common functionality.
-	http.HandleFunc("/view/", makeHandler(viewHandler))
-	http.HandleFunc("/edit/", makeHandler(editHandler))
-	http.HandleFunc("/save/", makeHandler(saveHandler))
-
-	log.Println("Server running, access via http://localhost" + port + "\n")
-
-	http.ListenAndServe(port, nil)
-
-}
 
